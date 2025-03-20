@@ -86,7 +86,7 @@ def results():
     query = """
         SELECT Train_No, Train_Name, Arrival_Time, Departure_Time, Distance, General_Fare, Sleeper_Fare, AC_Fare
         FROM train_schedule
-        WHERE Source_Station_Name = ? AND Destination_Station_Name = ?
+        WHERE Station_Name = ? AND Destination_Station_Name = ?
     """
     cursor.execute(query, (from_station, to_station))
     trains = cursor.fetchall()
@@ -94,3 +94,16 @@ def results():
     conn.close()
 
     return render_template("results.html", trains=trains, from_station=from_station, to_station=to_station, date=date)
+
+
+
+@app.route('/payment', methods=['GET', 'POST'])
+def payment():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        cvv = request.form.get('cvv')
+        card_number = request.form.get('card_number')
+        expiry_date = request.form.get('expiry_date')
+        return "Payment Successful!"
+    
+    return render_template('payment.html')

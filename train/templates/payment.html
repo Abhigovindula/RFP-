@@ -1,0 +1,92 @@
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Form</title>
+    <link rel="stylesheet" href="/static/paymentstyle.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Confirm Your Payment</h1>
+        <div class="first-row">
+            <div class="owner">
+                <h3>Name</h3>
+                <div class="input-field">
+                    <input type="text">
+                </div>
+            </div>
+            <div class="cvv">
+                <h3>CVV</h3>
+                <div class="input-field">
+                    <input type="password">
+                </div>
+            </div>
+        </div>
+        <div class="second-row">
+            <div class="card-number">
+                <h3>Card Number</h3>
+                <div class="input-field">
+                    <input type="text">
+                </div>
+            </div>
+        </div>
+        <div class="third-row">
+            <h3>Expiry date</h3>
+            <label for="expiry date"></label>
+            <input type="month" id="expiry date" name="expiry date">
+            
+            <div class="cards">
+                    <img src="/static/mc.png">                       
+                    <img src="/static/vi.png">
+                    <img src="/static/pp.png">
+            </div>
+     
+        </div>
+        <a href="">Confirm</a>
+    </div>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Form</title>
+    <link rel="stylesheet" href="/static/paymentstyle.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Confirm Your Payment</h1>
+        <form>
+            <div class="form-group">
+                <label for="name">Name on Card</label>
+                <input type="text" id="name" placeholder="Enter your name here" required>
+            </div>
+            <div class="form-group">
+                <label for="card-number">Card Number</label>
+                <input type="text" id="card-number" placeholder="xxxx xxxx xxxx xxxx" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="expiry-date">Expiry Date</label>
+                    <input type="month" id="expiry-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="cvv">CVV</label>
+                    <input type="password" id="cvv" placeholder="***" required>
+                </div>
+            </div>
+            <div class="card-icons">
+                <img src="/static/mc.png" alt="Mastercard">
+                <img src="/static/vi.png" alt="Visa">
+                <img src="/static/pp.png" alt="PayPal">
+            </div>
+            <button type="submit">Confirm Payment</button>
+        </form>
+    </div>
+</body>
+</html>
