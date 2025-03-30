@@ -58,7 +58,7 @@
                     <td>{{ train[6] }}</td>
                     <td>{{ train[7] }}</td>
                     <td>
-                        <a href="{{ url_for('payment')}}" class="book-button">Book Now</a>
+                        <a href="{{ url_for('add_passengers', train_no=train[0], train_name=train[1], from_station=from_station, to_station=to_station, date=date) }}" class="book-button">Book Now</a>
                     </td>
                 </tr>
                 {% endfor %}

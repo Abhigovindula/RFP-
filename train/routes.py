@@ -107,3 +107,67 @@ def payment():
         return "Payment Successful!"
     
     return render_template('payment.html')
+
+@app.route("/add_passengers", methods=["GET", "POST"])
+def add_passengers():
+    if request.method == "GET":
+        train_no = request.args.get("train_no")
+        train_name = request.args.get("train_name")
+        from_station = request.args.get("from_station")
+        to_station = request.args.get("to_station")
+        date = request.args.get("date")
+
+        # Get fare information from the database
+        conn = sqlite3.connect("trains.db")
+        cursor = conn.cursor()
+        query = """
+            SELECT General_Fare, Sleeper_Fare, AC_Fare
+            FROM train_schedule
+            WHERE Train_No = ? AND Station_Name = ? AND Destination_Station_Name = ?
+        """
+        cursor.execute(query, (train_no, from_station, to_station))
+        fares = cursor.fetchone()
+        conn.close()
+
+        if fares:
+            general_fare, sleeper_fare, ac_fare = fares
+        else:
+            flash("Train information not found.", "danger")
+            return redirect(url_for("dashboard"))
+
+        return render_template("add_passengers.html",
+                             train_no=train_no,
+                             train_name=train_name,
+                             from_station=from_station,
+                             to_station=to_station,
+                             date=date,
+                             general_fare=general_fare,
+                             sleeper_fare=sleeper_fare,
+                             ac_fare=ac_fare,
+                             total_fare=0)
+
+    elif request.method == "POST":
+        # Get the number of passengers
+        num_passengers = int(request.form.get("num_passengers"))
+        passengers = []
+
+        # Collect passenger details
+        for i in range(1, num_passengers + 1):
+            passenger = {
+                "name": request.form.get(f"passenger_{i}_name"),
+                "age": request.form.get(f"passenger_{i}_age"),
+                "gender": request.form.get(f"passenger_{i}_gender"),
+                "phone": request.form.get(f"passenger_{i}_phone"),
+                "class": request.form.get(f"passenger_{i}_class")
+            }
+            passengers.append(passenger)
+
+        # Store passenger details in session for payment page
+        session["passengers"] = passengers
+        session["train_no"] = request.form.get("train_no")
+        session["train_name"] = request.form.get("train_name")
+        session["from_station"] = request.form.get("from_station")
+        session["to_station"] = request.form.get("to_station")
+        session["date"] = request.form.get("date")
+
+        return redirect(url_for("payment"))
