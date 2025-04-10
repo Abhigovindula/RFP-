@@ -100,13 +100,87 @@ def results():
 @app.route('/payment', methods=['GET', 'POST'])
 def payment():
     if request.method == 'POST':
+        # Get payment details
         name = request.form.get('name')
         cvv = request.form.get('cvv')
         card_number = request.form.get('card_number')
         expiry_date = request.form.get('expiry_date')
-        return "Payment Successful!"
+        
+        # Get passenger and journey details from session
+        passengers = session.get('passengers', [])
+        train_no = session.get('train_no')
+        train_name = session.get('train_name')
+        from_station = session.get('from_station')
+        to_station = session.get('to_station')
+        date = session.get('date')
+        
+        # Get fare information from the database
+        conn = sqlite3.connect("trains.db")
+        cursor = conn.cursor()
+        query = """
+            SELECT General_Fare, Sleeper_Fare, AC_Fare
+            FROM train_schedule
+            WHERE Train_No = ? AND Station_Name = ? AND Destination_Station_Name = ?
+        """
+        cursor.execute(query, (train_no, from_station, to_station))
+        fares = cursor.fetchone()
+        conn.close()
+        
+        if fares:
+            general_fare, sleeper_fare, ac_fare = fares
+            
+            # Calculate fare for each passenger and update the passenger data
+            for passenger in passengers:
+                if passenger['class'] == 'general':
+                    passenger['fare'] = general_fare
+                elif passenger['class'] == 'sleeper':
+                    passenger['fare'] = sleeper_fare
+                else:  # AC class
+                    passenger['fare'] = ac_fare
+            
+            # Update the passengers in session with fare information
+            session['passengers'] = passengers
+        
+        # Store payment details in session
+        session['payment_details'] = {
+            'name': name,
+            'card_number': card_number[-4:],  # Store only last 4 digits
+            'expiry_date': expiry_date
+        }
+        
+        # Redirect to ticket details page
+        return redirect(url_for('ticket_details'))
     
     return render_template('payment.html')
+
+@app.route('/ticket_details')
+def ticket_details():
+    # Get all details from session
+    passengers = session.get('passengers', [])
+    train_no = session.get('train_no')
+    train_name = session.get('train_name')
+    from_station = session.get('from_station')
+    to_station = session.get('to_station')
+    date = session.get('date')
+    payment_details = session.get('payment_details', {})
+    
+    # Calculate total fare
+    total_fare = sum(passenger.get('fare', 0) for passenger in passengers)
+    
+    # Check if all required data is present
+    if not all([passengers, train_no, train_name, from_station, to_station, date]):
+        flash("Error: Missing booking information. Please try again.", "danger")
+        return redirect(url_for('home'))
+    
+    return render_template('ticket_details.html',
+                         passengers=passengers,
+                         train_no=train_no,
+                         train_name=train_name,
+                         from_station=from_station,
+                         to_station=to_station,
+                         date=date,
+                         payment_details=payment_details,
+                         total_fare=total_fare)
 
 @app.route("/add_passengers", methods=["GET", "POST"])
 def add_passengers():
@@ -151,23 +225,55 @@ def add_passengers():
         num_passengers = int(request.form.get("num_passengers"))
         passengers = []
 
-        # Collect passenger details
+        # Get fare information from the database
+        train_no = request.form.get("train_no")
+        from_station = request.form.get("from_station")
+        to_station = request.form.get("to_station")
+        
+        conn = sqlite3.connect("trains.db")
+        cursor = conn.cursor()
+        query = """
+            SELECT General_Fare, Sleeper_Fare, AC_Fare
+            FROM train_schedule
+            WHERE Train_No = ? AND Station_Name = ? AND Destination_Station_Name = ?
+        """
+        cursor.execute(query, (train_no, from_station, to_station))
+        fares = cursor.fetchone()
+        conn.close()
+
+        if fares:
+            general_fare, sleeper_fare, ac_fare = fares
+        else:
+            flash("Train information not found.", "danger")
+            return redirect(url_for("dashboard"))
+
+        # Collect passenger details and calculate fare
         for i in range(1, num_passengers + 1):
+            passenger_class = request.form.get(f"passenger_{i}_class")
+            fare = 0
+            if passenger_class == 'general':
+                fare = general_fare
+            elif passenger_class == 'sleeper':
+                fare = sleeper_fare
+            else:  # AC class
+                fare = ac_fare
+
             passenger = {
                 "name": request.form.get(f"passenger_{i}_name"),
                 "age": request.form.get(f"passenger_{i}_age"),
                 "gender": request.form.get(f"passenger_{i}_gender"),
                 "phone": request.form.get(f"passenger_{i}_phone"),
-                "class": request.form.get(f"passenger_{i}_class")
+                "class": passenger_class,
+                "fare": fare
             }
             passengers.append(passenger)
 
         # Store passenger details in session for payment page
         session["passengers"] = passengers
-        session["train_no"] = request.form.get("train_no")
+        session["train_no"] = train_no
         session["train_name"] = request.form.get("train_name")
-        session["from_station"] = request.form.get("from_station")
-        session["to_station"] = request.form.get("to_station")
+        session["from_station"] = from_station
+        session["to_station"] = to_station
         session["date"] = request.form.get("date")
 
         return redirect(url_for("payment"))

@@ -57,27 +57,57 @@
     <link rel="stylesheet" href="/static/paymentstyle.css">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        function formatCardNumber(input) {
+            // Remove all non-digit characters
+            let value = input.value.replace(/\D/g, '');
+            
+            // Limit to 16 digits
+            value = value.substring(0, 16);
+            
+            // Add space after every 4 digits
+            let formattedValue = '';
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formattedValue += ' ';
+                }
+                formattedValue += value[i];
+            }
+            
+            input.value = formattedValue;
+        }
+
+        function limitCVV(input) {
+            // Remove all non-digit characters
+            let value = input.value.replace(/\D/g, '');
+            
+            // Limit to 3 digits
+            input.value = value.substring(0, 3);
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>Confirm Your Payment</h1>
-        <form>
+        <form method="POST" action="{{ url_for('payment') }}">
             <div class="form-group">
                 <label for="name">Name on Card</label>
-                <input type="text" id="name" placeholder="Enter your name here" required>
+                <input type="text" id="name" name="name" placeholder="Enter your name here" required>
             </div>
             <div class="form-group">
                 <label for="card-number">Card Number</label>
-                <input type="text" id="card-number" placeholder="xxxx xxxx xxxx xxxx" required>
+                <input type="text" id="card-number" name="card_number" placeholder="xxxx xxxx xxxx xxxx" 
+                       oninput="formatCardNumber(this)" maxlength="19" required pattern="[0-9 ]{19}">
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label for="expiry-date">Expiry Date</label>
-                    <input type="month" id="expiry-date" required>
+                    <input type="month" id="expiry-date" name="expiry_date" required>
                 </div>
                 <div class="form-group">
                     <label for="cvv">CVV</label>
-                    <input type="password" id="cvv" placeholder="***" required>
+                    <input type="password" id="cvv" name="cvv" placeholder="***" 
+                           oninput="limitCVV(this)" maxlength="3" required pattern="[0-9]{3}">
                 </div>
             </div>
             <div class="card-icons">
